@@ -5,16 +5,18 @@ const prisma = new PrismaClient();
 const SALT_ROUNDS = 10;
 
 const user = {
-    email: 'npvinh0507@gmail.com',
-    password: '123456789'
+    username: 'filesharingp2p',
+    password: '123456789',
+    fullName: 'Baby Panther'
 };
 
 async function generateSampleData() {
     const hashPassword = hashSync(user.password, SALT_ROUNDS);
     const sampleUser = await prisma.user.create({
         data: {
-            email: user.email,
-            password: hashPassword
+            username: user.username,
+            password: hashPassword,
+            fullName: user.fullName
         }
     });
     console.log(sampleUser);
