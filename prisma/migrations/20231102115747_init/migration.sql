@@ -12,8 +12,8 @@ CREATE TABLE "User" (
 -- CreateTable
 CREATE TABLE "Session" (
     "id" TEXT NOT NULL,
-    "loginTime" TIMESTAMP(3) NOT NULL,
-    "logoutTime" TIMESTAMP(3) NOT NULL,
+    "loginTime" INTEGER NOT NULL,
+    "logoutTime" INTEGER,
     "ipAddress" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
 
@@ -26,7 +26,7 @@ CREATE TABLE "SharedDocument" (
     "name" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "size" INTEGER NOT NULL,
-    "sharedTime" TIMESTAMP(3) NOT NULL,
+    "sharedTime" INTEGER NOT NULL,
     "isAvailable" BOOLEAN NOT NULL DEFAULT false,
     "sessionId" TEXT NOT NULL,
 
@@ -35,9 +35,6 @@ CREATE TABLE "SharedDocument" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Session_userId_key" ON "Session"("userId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Session_userId_logoutTime_key" ON "Session"("userId", "logoutTime");

@@ -1,6 +1,6 @@
 import fastify, { FastifyInstance } from 'fastify';
 import type { FastifyCookieOptions } from '@fastify/cookie';
-import { CORS_WHITE_LIST, customErrorHandler, envs, loggerConfig, swaggerConfig, swaggerUIConfig } from '@configs';
+import { customErrorHandler, envs, loggerConfig, swaggerConfig, swaggerUIConfig } from '@configs';
 import { apiPlugin, authPlugin } from './routes';
 
 export function createServer(config: ServerConfig): FastifyInstance {
@@ -9,7 +9,8 @@ export function createServer(config: ServerConfig): FastifyInstance {
     app.register(import('@fastify/sensible'));
     app.register(import('@fastify/helmet'));
     app.register(import('@fastify/cors'), {
-        origin: CORS_WHITE_LIST
+        origin: true,
+        credentials: true
     });
 
     app.register(import('@fastify/cookie'), {
@@ -17,11 +18,8 @@ export function createServer(config: ServerConfig): FastifyInstance {
         hook: 'onRequest'
     } as FastifyCookieOptions);
 
-    // Swagger on production will be turned off in the future
-    if (envs.isDev) {
-        app.register(import('@fastify/swagger'), swaggerConfig);
-        app.register(import('@fastify/swagger-ui'), swaggerUIConfig);
-    }
+    app.register(import('@fastify/swagger'), swaggerConfig);
+    app.register(import('@fastify/swagger-ui'), swaggerUIConfig);
 
     app.register(authPlugin, { prefix: '/auth' });
     app.register(apiPlugin, { prefix: '/api' });

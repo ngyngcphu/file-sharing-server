@@ -1,12 +1,13 @@
-import { compare, hash } from 'bcrypt';
-import { prisma } from '@repositories';
-import { cookieOptions, DUPLICATED_USERNAME, LOGIN_FAIL, SALT_ROUNDS, USER_NOT_FOUND } from '@constants';
-import jwt from 'jsonwebtoken';
-import { envs } from '@configs';
 import { User } from '@prisma/client';
-import { LoginDto, SignupDto } from '@dtos/in';
+import { compare, hash } from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import moment from 'moment';
+import { envs } from '@configs';
+import { cookieOptions, DUPLICATED_USERNAME, LOGIN_FAIL, SALT_ROUNDS, USER_NOT_FOUND, SESSION_EXIST, DUPLICATED_LOGOUT } from '@constants';
+import { LoginDto, SignupDto, LogoutDto } from '@dtos/in';
 import { AuthResultDto } from '@dtos/out';
 import { Handler } from '@interfaces';
+import { prisma } from '@repositories';
 import { logger } from '@utils';
 
 const login: Handler<AuthResultDto, { Body: LoginDto }> = async (req, res) => {
@@ -14,7 +15,8 @@ const login: Handler<AuthResultDto, { Body: LoginDto }> = async (req, res) => {
         select: {
             id: true,
             username: true,
-            password: true
+            password: true,
+            isAvailable: true
         },
         where: { username: req.body.username }
     });
@@ -23,13 +25,32 @@ const login: Handler<AuthResultDto, { Body: LoginDto }> = async (req, res) => {
     const correctPassword = await compare(req.body.password, user.password);
     if (!correctPassword) return res.badRequest(LOGIN_FAIL);
 
-    const userToken = jwt.sign({ userId: user.id }, envs.JWT_SECRET);
-    res.setCookie('token', userToken, cookieOptions);
+    const [sessionCurrents, totalSessionCurrents] = await prisma.$transaction([
+        prisma.session.findMany({ select: { logoutTime: true }, where: { userId: user.id } }),
+        prisma.session.count({ where: { userId: user.id } })
+    ]);
 
-    return {
-        id: user.id,
-        username: user.username
-    };
+    if (sessionCurrents.length && !sessionCurrents[totalSessionCurrents - 1].logoutTime) {
+        return {
+            id: user.id,
+            message: SESSION_EXIST
+        };
+    } else {
+        await prisma.user.update({ data: { isAvailable: true }, where: { id: user.id } });
+        await prisma.session.create({
+            data: {
+                loginTime: moment().unix(),
+                ipAddress: req.ip,
+                userId: user.id
+            }
+        });
+        const userToken = jwt.sign({ userId: user.id }, envs.JWT_SECRET);
+        res.setCookie('token', userToken, cookieOptions);
+        return {
+            id: user.id,
+            message: 'Login in successfully !'
+        };
+    }
 };
 
 const signup: Handler<AuthResultDto, { Body: SignupDto }> = async (req, res) => {
@@ -53,13 +74,38 @@ const signup: Handler<AuthResultDto, { Body: SignupDto }> = async (req, res) => 
 
     return {
         id: user.id,
-        username: user.username
+        message: 'Sign up successfully !'
     };
 };
 
-const logout: Handler<string> = async (_req, res) => {
-    res.clearCookie('token');
-    return 'Log out successfully !';
+const logout: Handler<string, { Body: LogoutDto }> = async (req, res) => {
+    const [userId] = await prisma.$transaction([
+        prisma.user.findUnique({ select: { id: true }, where: { id: req.body.id } }),
+        prisma.user.update({ data: { isAvailable: false }, where: { id: req.body.id } })
+    ]);
+
+    const [session, totalSession] = await prisma.$transaction([
+        prisma.session.findMany({
+            select: {
+                id: true,
+                logoutTime: true
+            },
+            where: { userId: userId?.id }
+        }),
+        prisma.session.count({ where: { userId: userId?.id } })
+    ]);
+    if (!session[totalSession - 1].logoutTime) {
+        await prisma.session.update({
+            data: {
+                logoutTime: moment().unix()
+            },
+            where: { id: session[totalSession - 1].id }
+        });
+        res.clearCookie('token');
+        return 'Log out successfully !';
+    } else {
+        return DUPLICATED_LOGOUT;
+    }
 };
 
 export const authHandler = {
