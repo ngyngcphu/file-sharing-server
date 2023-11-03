@@ -27,7 +27,7 @@ CREATE TABLE "SharedDocument" (
     "type" TEXT NOT NULL,
     "size" INTEGER NOT NULL,
     "sharedTime" INTEGER NOT NULL,
-    "isAvailable" BOOLEAN NOT NULL DEFAULT false,
+    "isAvailable" BOOLEAN NOT NULL DEFAULT true,
     "sessionId" TEXT NOT NULL,
 
     CONSTRAINT "SharedDocument_pkey" PRIMARY KEY ("id")

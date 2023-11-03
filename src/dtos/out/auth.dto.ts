@@ -3,13 +3,11 @@ import { Static, Type } from '@sinclair/typebox';
 
 export const LoginResultDto = Type.Object({
     userId: ObjectId,
-    sessionId: ObjectId,
-    message: Type.String()
+    sessionId: ObjectId
 });
 export type LoginResultDto = Static<typeof LoginResultDto>;
 
 export const SignupResultDto = Type.Object({
-    userId: ObjectId,
-    message: Type.String()
+    userId: ObjectId
 });
 export type SignupResultDto = Static<typeof SignupResultDto>;

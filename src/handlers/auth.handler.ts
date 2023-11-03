@@ -53,12 +53,11 @@ const login: Handler<LoginResultDto, { Body: LoginDto }> = async (req, res) => {
                 id: true
             }
         });
-        const userToken = jwt.sign({ userId: user.id }, envs.JWT_SECRET);
+        const userToken = jwt.sign({ userId: user.id, sessionId: session.id }, envs.JWT_SECRET);
         res.setCookie('token', userToken, cookieOptions);
         return {
             userId: user.id,
-            sessionId: session.id,
-            message: 'Login in successfully !'
+            sessionId: session.id
         };
     }
 };
@@ -83,8 +82,7 @@ const signup: Handler<Omit<SignupResultDto, 'sessionId'>, { Body: SignupDto }> =
     res.setCookie('token', userToken, cookieOptions);
 
     return {
-        userId: user.id,
-        message: 'Sign up successfully !'
+        userId: user.id
     };
 };
 

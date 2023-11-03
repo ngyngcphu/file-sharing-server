@@ -38,7 +38,7 @@ model SharedDocument {
   type        String
   size        Int
   sharedTime  Int
-  isAvailable Boolean @default(false)
+  isAvailable Boolean @default(true)
   session     Session @relation(fields: [sessionId], references: [id])
   sessionId   String
 }

@@ -1,12 +1,8 @@
 import { Static, Type } from '@sinclair/typebox';
 import { ObjectId } from '@dtos/common';
 
-export const FileDto = Type.Object({
-    name: Type.String(),
-    type: Type.String(),
-    size: Type.Integer(),
-    sharedTime: Type.Date(),
-    sessionId: ObjectId
+export const FileResultDto = Type.Object({
+    fileId: ObjectId
 });
 
-export type FileDto = Static<typeof FileDto>;
+export type FileResultDto = Static<typeof FileResultDto>;

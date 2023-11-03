@@ -12,6 +12,7 @@ export async function verifyToken(req: FastifyRequest, res: FastifyReply) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const decodedPayload: any = jwt.verify(token, envs.JWT_SECRET);
         req.userId = decodedPayload['userId'];
+        req.sessionId = decodedPayload['sessionId'];
         return;
     } catch (err) {
         req.log.info(err);
