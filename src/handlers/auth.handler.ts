@@ -3,14 +3,23 @@ import { compare, hash } from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import moment from 'moment';
 import { envs } from '@configs';
-import { cookieOptions, DUPLICATED_USERNAME, LOGIN_FAIL, SALT_ROUNDS, USER_NOT_FOUND, SESSION_EXIST, DUPLICATED_LOGOUT } from '@constants';
+import {
+    cookieOptions,
+    DUPLICATED_USERNAME,
+    LOGIN_FAIL,
+    SALT_ROUNDS,
+    USER_NOT_FOUND,
+    SESSION_EXIST,
+    DUPLICATED_LOGOUT,
+    WRONG_IP_LOGOUT
+} from '@constants';
 import { LoginDto, SignupDto, LogoutDto } from '@dtos/in';
-import { AuthResultDto } from '@dtos/out';
+import { LoginResultDto, SignupResultDto } from '@dtos/out';
 import { Handler } from '@interfaces';
 import { prisma } from '@repositories';
 import { logger } from '@utils';
 
-const login: Handler<AuthResultDto, { Body: LoginDto }> = async (req, res) => {
+const login: Handler<LoginResultDto, { Body: LoginDto }> = async (req, res) => {
     const user = await prisma.user.findUnique({
         select: {
             id: true,
@@ -26,34 +35,35 @@ const login: Handler<AuthResultDto, { Body: LoginDto }> = async (req, res) => {
     if (!correctPassword) return res.badRequest(LOGIN_FAIL);
 
     const [sessionCurrents, totalSessionCurrents] = await prisma.$transaction([
-        prisma.session.findMany({ select: { logoutTime: true }, where: { userId: user.id } }),
+        prisma.session.findMany({ select: { id: true, logoutTime: true }, where: { userId: user.id } }),
         prisma.session.count({ where: { userId: user.id } })
     ]);
 
     if (sessionCurrents.length && !sessionCurrents[totalSessionCurrents - 1].logoutTime) {
-        return {
-            id: user.id,
-            message: SESSION_EXIST
-        };
+        return res.badRequest(SESSION_EXIST);
     } else {
         await prisma.user.update({ data: { isAvailable: true }, where: { id: user.id } });
-        await prisma.session.create({
+        const session = await prisma.session.create({
             data: {
                 loginTime: moment().unix(),
                 ipAddress: req.ip,
                 userId: user.id
+            },
+            select: {
+                id: true
             }
         });
         const userToken = jwt.sign({ userId: user.id }, envs.JWT_SECRET);
         res.setCookie('token', userToken, cookieOptions);
         return {
-            id: user.id,
+            userId: user.id,
+            sessionId: session.id,
             message: 'Login in successfully !'
         };
     }
 };
 
-const signup: Handler<AuthResultDto, { Body: SignupDto }> = async (req, res) => {
+const signup: Handler<Omit<SignupResultDto, 'sessionId'>, { Body: SignupDto }> = async (req, res) => {
     const hashPassword = await hash(req.body.password, SALT_ROUNDS);
     let user: User;
     try {
@@ -73,15 +83,20 @@ const signup: Handler<AuthResultDto, { Body: SignupDto }> = async (req, res) => 
     res.setCookie('token', userToken, cookieOptions);
 
     return {
-        id: user.id,
+        userId: user.id,
         message: 'Sign up successfully !'
     };
 };
 
 const logout: Handler<string, { Body: LogoutDto }> = async (req, res) => {
+    const ipLogout = await prisma.session.findUnique({ select: { ipAddress: true }, where: { id: req.body.sessionId } });
+    if (ipLogout?.ipAddress !== req.ip) {
+        return res.badRequest(WRONG_IP_LOGOUT);
+    }
+
     const [userId] = await prisma.$transaction([
-        prisma.user.findUnique({ select: { id: true }, where: { id: req.body.id } }),
-        prisma.user.update({ data: { isAvailable: false }, where: { id: req.body.id } })
+        prisma.user.findUnique({ select: { id: true }, where: { id: req.body.userId } }),
+        prisma.user.update({ data: { isAvailable: false }, where: { id: req.body.userId } })
     ]);
 
     const [session, totalSession] = await prisma.$transaction([

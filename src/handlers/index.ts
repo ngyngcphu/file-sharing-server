@@ -3,5 +3,5 @@
  */
 
 export * from './auth.handler';
-// export * from './file.handler';
+export * from './file.handler';
 export * from './user.handler';

@@ -9,3 +9,5 @@ export const NOT_FOUND_GENERIC = 'Not found !';
 
 export const SESSION_EXIST = 'There is another device logged in !';
 export const DUPLICATED_LOGOUT = 'Please log in before logging out !';
+export const SESSION_NOT_FOUND = 'Session not found !';
+export const WRONG_IP_LOGOUT = 'Wrong IP address when logging out !';

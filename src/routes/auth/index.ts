@@ -1,6 +1,6 @@
 import { Type } from '@sinclair/typebox';
 import { LoginDto, SignupDto, LogoutDto } from '@dtos/in';
-import { AuthResultDto } from '@dtos/out';
+import { LoginResultDto, SignupResultDto } from '@dtos/out';
 import { authHandler } from '@handlers';
 import { createRoutes } from '@utils';
 
@@ -11,7 +11,7 @@ export const authPlugin = createRoutes('Auth', [
         schema: {
             body: LoginDto,
             response: {
-                200: AuthResultDto
+                200: LoginResultDto
             }
         },
         handler: authHandler.login
@@ -22,7 +22,7 @@ export const authPlugin = createRoutes('Auth', [
         schema: {
             body: SignupDto,
             response: {
-                200: AuthResultDto
+                200: SignupResultDto
             }
         },
         handler: authHandler.signup

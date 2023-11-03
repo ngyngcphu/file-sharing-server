@@ -1,9 +1,15 @@
 import { ObjectId } from '@dtos/common';
 import { Static, Type } from '@sinclair/typebox';
 
-export const AuthResultDto = Type.Object({
-    id: ObjectId,
+export const LoginResultDto = Type.Object({
+    userId: ObjectId,
+    sessionId: ObjectId,
     message: Type.String()
 });
+export type LoginResultDto = Static<typeof LoginResultDto>;
 
-export type AuthResultDto = Static<typeof AuthResultDto>;
+export const SignupResultDto = Type.Object({
+    userId: ObjectId,
+    message: Type.String()
+});
+export type SignupResultDto = Static<typeof SignupResultDto>;

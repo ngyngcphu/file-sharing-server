@@ -18,6 +18,7 @@ export const SignupDto = Type.Object({
 export type SignupDto = Static<typeof SignupDto>;
 
 export const LogoutDto = Type.Object({
-    id: ObjectId
+    userId: ObjectId,
+    sessionId: ObjectId
 });
 export type LogoutDto = Static<typeof LogoutDto>;
