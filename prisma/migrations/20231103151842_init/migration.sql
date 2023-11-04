@@ -39,6 +39,9 @@ CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 -- CreateIndex
 CREATE UNIQUE INDEX "Session_userId_logoutTime_key" ON "Session"("userId", "logoutTime");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "SharedDocument_sessionId_name_key" ON "SharedDocument"("sessionId", "name");
+
 -- AddForeignKey
 ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 

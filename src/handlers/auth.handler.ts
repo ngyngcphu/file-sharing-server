@@ -62,7 +62,7 @@ const login: Handler<LoginResultDto, { Body: LoginDto }> = async (req, res) => {
     }
 };
 
-const signup: Handler<Omit<SignupResultDto, 'sessionId'>, { Body: SignupDto }> = async (req, res) => {
+const signup: Handler<SignupResultDto, { Body: SignupDto }> = async (req, res) => {
     const hashPassword = await hash(req.body.password, SALT_ROUNDS);
     let user: User;
     try {
@@ -77,10 +77,6 @@ const signup: Handler<Omit<SignupResultDto, 'sessionId'>, { Body: SignupDto }> =
         logger.info(err);
         return res.badRequest(DUPLICATED_USERNAME);
     }
-
-    const userToken = jwt.sign({ userId: user.id }, envs.JWT_SECRET);
-    res.setCookie('token', userToken, cookieOptions);
-
     return {
         userId: user.id
     };
