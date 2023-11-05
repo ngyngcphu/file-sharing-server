@@ -114,21 +114,21 @@ const discoverHostName: Handler<MetadataFileHostNameDto[], { Params: { hostName:
             include: { sharedDocuments: true }
         });
 
-        if (!listMetadataFile) {
-            return res.badRequest(HOSTNAME_NOT_FOUND);
-        }
-
         if (listMetadataFile.length > 0) {
             const metadataFile = listMetadataFile[0].sharedDocuments;
-            return metadataFile.map((file) => ({
-                name: file.name,
-                type: file.type,
-                size: file.size,
-                sharedTime: file.sharedTime,
-                isAvailable: file.isAvailable
-            }));
+            if (metadataFile.length > 0) {
+                return metadataFile.map((file) => ({
+                    name: file.name,
+                    type: file.type,
+                    size: file.size,
+                    sharedTime: file.sharedTime,
+                    isAvailable: file.isAvailable
+                }));
+            } else {
+                return [];
+            }
         } else {
-            return [];
+            return res.badRequest(HOSTNAME_NOT_FOUND);
         }
     }
 

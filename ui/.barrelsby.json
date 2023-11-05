@@ -7,7 +7,7 @@
     "./src/layouts",
     "./src/pages",
     "./src/services",
-    "./src/states"
+    "./src/utils"
   ],
   "delete": true
 }

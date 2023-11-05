@@ -49,7 +49,11 @@ export default defineConfig({
       {
         find: '@services',
         replacement: path.resolve(__dirname, 'src/services')
-      }
+      },
+      {
+        find: '@utils',
+        replacement: path.resolve(__dirname, 'src/utils')
+      },
     ]
   }
 });
