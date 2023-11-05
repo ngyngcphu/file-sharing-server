@@ -6,5 +6,5 @@ import { filePlugin } from './file.plugin';
 export async function apiPlugin(app: FastifyInstance) {
     app.addHook('onRequest', verifyToken);
     app.register(userPlugin, { prefix: '/user' });
-    app.register(filePlugin, { prefix: '/file' });
+    app.register(filePlugin, { prefix: '' });
 }

@@ -1,6 +1,6 @@
 import moment from 'moment';
 import { SESSION_NOT_FOUND, FNAME_NOT_FOUND } from '@constants';
-import { FileDto } from '@dtos/in';
+import { FileDto, ListFileDto } from '@dtos/in';
 import { FileResultDto } from '@dtos/out';
 import { Handler } from '@interfaces';
 import { prisma } from '@repositories';
@@ -80,7 +80,31 @@ const listHostName: Handler<string[], { Querystring: { fname: string } }> = asyn
     return uniqueIPs;
 };
 
+const uploadListMetadatFile: Handler<number, { Body: ListFileDto }> = async (req, res) => {
+    const session = await prisma.session.findUnique({
+        select: {
+            id: true
+        },
+        where: { id: req.body.sessionId }
+    });
+    if (!session) return res.badRequest(SESSION_NOT_FOUND);
+
+    const data = req.body.listFileMetadata.map((file) => ({
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        sharedTime: moment().unix(),
+        sessionId: req.body.sessionId
+    }));
+
+    const listFileMetadata = await prisma.sharedDocument.createMany({
+        data: data
+    });
+    return listFileMetadata.count;
+};
+
 export const fileHandler = {
     uploadMetadataFile,
-    listHostName
+    listHostName,
+    uploadListMetadatFile
 };

@@ -1,4 +1,4 @@
-import { FileDto } from '@dtos/in';
+import { FileDto, ListFileDto } from '@dtos/in';
 import { FileResultDto } from '@dtos/out';
 import { fileHandler } from '@handlers';
 import { Type } from '@sinclair/typebox';
@@ -7,7 +7,7 @@ import { createRoutes } from '@utils';
 export const filePlugin = createRoutes('File', [
     {
         method: 'POST',
-        url: '',
+        url: '/file',
         schema: {
             body: FileDto,
             response: {
@@ -18,7 +18,7 @@ export const filePlugin = createRoutes('File', [
     },
     {
         method: 'GET',
-        url: '',
+        url: '/file',
         schema: {
             querystring: { fname: Type.String() },
             response: {
@@ -26,5 +26,16 @@ export const filePlugin = createRoutes('File', [
             }
         },
         handler: fileHandler.listHostName
+    },
+    {
+        method: 'POST',
+        url: '/listFiles',
+        schema: {
+            body: ListFileDto,
+            response: {
+                200: Type.Number()
+            }
+        },
+        handler: fileHandler.uploadListMetadatFile
     }
 ]);
