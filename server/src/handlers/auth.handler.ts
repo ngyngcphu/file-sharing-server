@@ -83,14 +83,23 @@ const signup: Handler<SignupResultDto, { Body: SignupDto }> = async (req, res) =
 };
 
 const logout: Handler<string, { Body: LogoutDto }> = async (req, res) => {
-    const ipLogout = await prisma.session.findUnique({ select: { ipAddress: true }, where: { id: req.body.sessionId } });
-    if (ipLogout?.ipAddress !== req.ip) {
+    const sessionLogout = await prisma.session.findUnique({
+        where: { id: req.body.sessionId },
+        include: { sharedDocuments: true }
+    });
+    if (sessionLogout?.ipAddress !== req.ip) {
         return res.badRequest(WRONG_IP_LOGOUT);
+    }
+    if (sessionLogout.sharedDocuments.length > 0) {
+        await prisma.sharedDocument.updateMany({
+            where: { sessionId: sessionLogout.id },
+            data: { isAvailable: false }
+        });
     }
 
     const [userId] = await prisma.$transaction([
         prisma.user.findUnique({ select: { id: true }, where: { id: req.body.userId } }),
-        prisma.user.update({ data: { isAvailable: false }, where: { id: req.body.userId } })
+        prisma.user.update({ data: { isAvailable: false }, where: { id: req.body.userId } }),
     ]);
 
     const [session, totalSession] = await prisma.$transaction([

@@ -52,9 +52,5 @@ test/**/*.js.map
 /public
 /dist
 
-# env
-.env*
-!.env.example
-
 # certs
 *.crt
