@@ -1,13 +1,15 @@
-import { FileDto, ListFileDto } from '@dtos/in';
-import { FileResultDto } from '@dtos/out';
-import { fileHandler } from '@handlers';
 import { Type } from '@sinclair/typebox';
+import { FileDto, ListFileDto } from '@dtos/in';
+import { FileResultDto, MetadataFileHostNameDto } from '@dtos/out';
+import { fileHandler } from '@handlers';
+import { verifyToken } from '@hooks';
 import { createRoutes } from '@utils';
 
 export const filePlugin = createRoutes('File', [
     {
         method: 'POST',
         url: '/file',
+        onRequest: verifyToken,
         schema: {
             body: FileDto,
             response: {
@@ -19,6 +21,7 @@ export const filePlugin = createRoutes('File', [
     {
         method: 'GET',
         url: '/file',
+        onRequest: verifyToken,
         schema: {
             querystring: { fname: Type.String() },
             response: {
@@ -30,6 +33,7 @@ export const filePlugin = createRoutes('File', [
     {
         method: 'POST',
         url: '/listFiles',
+        onRequest: verifyToken,
         schema: {
             body: ListFileDto,
             response: {
@@ -37,5 +41,16 @@ export const filePlugin = createRoutes('File', [
             }
         },
         handler: fileHandler.uploadListMetadatFile
+    },
+    {
+        method: 'GET',
+        url: '/listFiles/:hostName',
+        schema: {
+            params: { hostName: Type.String() },
+            response: {
+                200: Type.Array(MetadataFileHostNameDto)
+            }
+        },
+        handler: fileHandler.discoverHostName
     }
 ]);

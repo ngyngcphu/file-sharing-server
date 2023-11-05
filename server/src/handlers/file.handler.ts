@@ -1,7 +1,7 @@
 import moment from 'moment';
-import { SESSION_NOT_FOUND, FNAME_NOT_FOUND } from '@constants';
+import { SESSION_NOT_FOUND, FNAME_NOT_FOUND, HOSTNAME_NOT_FOUND } from '@constants';
 import { FileDto, ListFileDto } from '@dtos/in';
-import { FileResultDto } from '@dtos/out';
+import { FileResultDto, MetadataFileHostNameDto } from '@dtos/out';
 import { Handler } from '@interfaces';
 import { prisma } from '@repositories';
 
@@ -103,8 +103,38 @@ const uploadListMetadatFile: Handler<number, { Body: ListFileDto }> = async (req
     return listFileMetadata.count;
 };
 
+const discoverHostName: Handler<MetadataFileHostNameDto[], { Params: { hostName: string } }> =
+    async (req, res) => {
+        const hostName = req.params.hostName;
+        const listMetadataFile = await prisma.session.findMany({
+            where: {
+                ipAddress: hostName,
+                logoutTime: null
+            },
+            include: { sharedDocuments: true }
+        });
+
+        if (!listMetadataFile) {
+            return res.badRequest(HOSTNAME_NOT_FOUND);
+        }
+
+        if (listMetadataFile.length > 0) {
+            const metadataFile = listMetadataFile[0].sharedDocuments;
+            return metadataFile.map((file) => ({
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                sharedTime: file.sharedTime,
+                isAvailable: file.isAvailable
+            }));
+        } else {
+            return [];
+        }
+    }
+
 export const fileHandler = {
     uploadMetadataFile,
     listHostName,
-    uploadListMetadatFile
+    uploadListMetadatFile,
+    discoverHostName
 };

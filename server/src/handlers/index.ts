@@ -4,4 +4,5 @@
 
 export * from './auth.handler';
 export * from './file.handler';
+export * from './hostName.handler';
 export * from './user.handler';

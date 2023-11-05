@@ -1,2 +1,2 @@
 type Result<T> = Promise<T | void>;
-type HandlerTag = 'User' | 'Auth' | 'File';
+type HandlerTag = 'User' | 'Auth' | 'File' | 'HostName';
