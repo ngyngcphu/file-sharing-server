@@ -106,29 +106,35 @@ const uploadListMetadatFile: Handler<number, { Body: ListFileDto }> = async (req
 const discoverHostName: Handler<MetadataFileHostNameDto[], { Params: { hostName: string } }> =
     async (req, res) => {
         const hostName = req.params.hostName;
+        const listSessions = await prisma.user.findUnique({
+            where: {
+                username: hostName,
+                isAvailable: true
+            },
+            include: { session: true }
+        });
+        if (!listSessions) {
+            return res.badRequest(HOSTNAME_NOT_FOUND);
+        }
         const listMetadataFile = await prisma.session.findMany({
             where: {
-                ipAddress: hostName,
-                logoutTime: null
+                ipAddress: listSessions.session[listSessions.session.length - 1].ipAddress,
             },
             include: { sharedDocuments: true }
         });
 
-        if (listMetadataFile.length > 0) {
-            const metadataFile = listMetadataFile[0].sharedDocuments;
-            if (metadataFile.length > 0) {
-                return metadataFile.map((file) => ({
-                    name: file.name,
-                    type: file.type,
-                    size: file.size,
-                    sharedTime: file.sharedTime,
-                    isAvailable: file.isAvailable
-                }));
-            } else {
-                return [];
-            }
+
+        const metadataFile = listMetadataFile[0].sharedDocuments;
+        if (metadataFile.length > 0) {
+            return metadataFile.map((file) => ({
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                sharedTime: file.sharedTime,
+                isAvailable: file.isAvailable
+            }));
         } else {
-            return res.badRequest(HOSTNAME_NOT_FOUND);
+            return [];
         }
     }
 

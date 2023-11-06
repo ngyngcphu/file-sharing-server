@@ -6,5 +6,5 @@ import { hostNamePlugin } from './hostName.plugin';
 export async function apiPlugin(app: FastifyInstance) {
     app.register(userPlugin, { prefix: '/user' });
     app.register(filePlugin, { prefix: '' });
-    app.register(hostNamePlugin, { prefix: '/hostName' });
+    app.register(hostNamePlugin, { prefix: '' });
 }

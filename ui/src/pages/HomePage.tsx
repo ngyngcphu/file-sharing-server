@@ -1,11 +1,17 @@
 import { ReactTerminal } from "react-terminal";
+import axios from "axios";
 import moment from "moment";
 import { hostNameService } from "@services";
 import { formatFileSize } from "@utils";
 
 export function HomePage() {
     const commands = {
-        ls: async () => {
+        ls: async (clientsAndActive: string) => {
+            const [clients, active] = clientsAndActive.split(' ');
+            if (!clients || !active) {
+                return "Wrong format of command 'ls'. Please use 'ls clients active'";
+            }
+
             const listHostNames = await hostNameService.getAll();
             if (listHostNames.length > 0) {
                 return (
@@ -61,6 +67,27 @@ export function HomePage() {
                 }
             } else {
                 return "Invalid 'discover' command. Please use 'discover <hostname>'.";
+            }
+        },
+        ping: async (hostName: string) => {
+            if (hostName.trim() === '') {
+                return "Please provide <hostname> after 'ping'"
+            }
+            const word = hostName.trim().split(' ');
+            if (word.length === 1) {
+                try {
+                    const ipAddress = await hostNameService.transfer(hostName);
+                    try {
+                        const liveSignal = await axios.get(`http://${ipAddress}:8080/api/ping`);
+                        return `(${ipAddress}) ${liveSignal.data}`;
+                    } catch (err) {
+                        return `(${ipAddress}) Dead !`;
+                    }
+                } catch (err) {
+                    return 'HostName not found !';
+                }
+            } else {
+                return "Invalid 'ping' command. Please use 'ping <hostname>'.";
             }
         }
     }
