@@ -20,3 +20,9 @@ export const ListFileDto = Type.Object({
     )
 });
 export type ListFileDto = Static<typeof ListFileDto>;
+
+export const FileMarkDelete = Type.Object({
+    sessionId: Type.String(),
+    fname: Type.String()
+});
+export type FileMarkDelete = Static<typeof FileMarkDelete>;

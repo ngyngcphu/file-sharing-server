@@ -1,4 +1,5 @@
 import { Type } from '@sinclair/typebox';
+import { FileAllHostNameDto } from '@dtos/out';
 import { hostNameHandler } from '@handlers';
 import { createRoutes } from '@utils';
 
@@ -23,5 +24,15 @@ export const hostNamePlugin = createRoutes('HostName', [
             }
         },
         handler: hostNameHandler.transferHostNameToIP
+    },
+    {
+        method: 'GET',
+        url: '/fileMetadata',
+        schema: {
+            response: {
+                200: Type.Array(FileAllHostNameDto)
+            }
+        },
+        handler: hostNameHandler.listFileAvailable
     }
 ]);

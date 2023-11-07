@@ -78,7 +78,10 @@ export function HomePage() {
                 try {
                     const ipAddress = await hostNameService.transfer(hostName);
                     try {
-                        const liveSignal = await axios.get(`http://${ipAddress}:8080/api/ping`);
+                        const axiosInstance = axios.create({
+                            timeout: 5000
+                        });
+                        const liveSignal = await axiosInstance.get(`http://${ipAddress}:8080/api/ping`);
                         return `(${ipAddress}) ${liveSignal.data}`;
                     } catch (err) {
                         return `(${ipAddress}) Dead !`;

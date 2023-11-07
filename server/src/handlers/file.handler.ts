@@ -1,6 +1,6 @@
 import moment from 'moment';
 import { SESSION_NOT_FOUND, FNAME_NOT_FOUND, HOSTNAME_NOT_FOUND } from '@constants';
-import { FileDto, ListFileDto } from '@dtos/in';
+import { FileDto, ListFileDto, FileMarkDelete } from '@dtos/in';
 import { FileResultDto, MetadataFileHostNameDto } from '@dtos/out';
 import { Handler } from '@interfaces';
 import { prisma } from '@repositories';
@@ -29,7 +29,8 @@ const uploadMetadataFile: Handler<FileResultDto, { Body: FileDto }> = async (req
         const fileUpdate = await prisma.sharedDocument.update({
             data: {
                 sharedTime: moment().unix(),
-                size: req.body.size
+                size: req.body.size,
+                isAvailable: true
             },
             where: { id: fileExist.id }
         });
@@ -124,7 +125,7 @@ const discoverHostName: Handler<MetadataFileHostNameDto[], { Params: { hostName:
         });
 
 
-        const metadataFile = listMetadataFile[0].sharedDocuments;
+        const metadataFile = listMetadataFile[listMetadataFile.length - 1].sharedDocuments;
         if (metadataFile.length > 0) {
             return metadataFile.map((file) => ({
                 name: file.name,
@@ -136,11 +137,36 @@ const discoverHostName: Handler<MetadataFileHostNameDto[], { Params: { hostName:
         } else {
             return [];
         }
+    };
+
+const markFileDeleted: Handler<string, { Params: FileMarkDelete }> = async (req, res) => {
+    const { sessionId, fname } = req.params;
+    const fileExist = await prisma.sharedDocument.findUnique({
+        where: {
+            sessionId_name: {
+                sessionId: sessionId,
+                name: fname
+            }
+        },
+        select: {
+            id: true
+        }
+    });
+    if (fileExist) {
+        await prisma.sharedDocument.update({
+            data: { isAvailable: false },
+            where: { id: fileExist.id }
+        });
+        return fileExist.id;
+    } else {
+        return res.badRequest(FNAME_NOT_FOUND);
     }
+}
 
 export const fileHandler = {
     uploadMetadataFile,
     listHostName,
     uploadListMetadatFile,
-    discoverHostName
+    discoverHostName,
+    markFileDeleted
 };

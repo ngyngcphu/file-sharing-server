@@ -1,5 +1,5 @@
 import { Type } from '@sinclair/typebox';
-import { FileDto, ListFileDto } from '@dtos/in';
+import { FileDto, ListFileDto, FileMarkDelete } from '@dtos/in';
 import { FileResultDto, MetadataFileHostNameDto } from '@dtos/out';
 import { fileHandler } from '@handlers';
 import { verifyToken } from '@hooks';
@@ -52,5 +52,16 @@ export const filePlugin = createRoutes('File', [
             }
         },
         handler: fileHandler.discoverHostName
+    },
+    {
+        method: 'PATCH',
+        url: '/file/:sessionId/:fname',
+        schema: {
+            params: FileMarkDelete,
+            response: {
+                200: Type.String()
+            }
+        },
+        handler: fileHandler.markFileDeleted
     }
 ]);

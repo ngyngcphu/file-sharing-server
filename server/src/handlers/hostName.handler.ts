@@ -1,4 +1,5 @@
 import { HOSTNAME_NOT_FOUND } from "@constants";
+import { FileAllHostNameDto } from "@dtos/out";
 import { Handler } from "@interfaces";
 import { prisma } from "@repositories";
 import { logger } from "@utils";
@@ -41,4 +42,55 @@ const transferHostNameToIP: Handler<string, { Params: { hostName: string } }> = 
     }
 }
 
-export const hostNameHandler = { getAllHostNames, transferHostNameToIP }
+const listFileAvailable: Handler<FileAllHostNameDto[]> = async (_req, res) => {
+    try {
+        const listFileAvailable = await prisma.sharedDocument.findMany({
+            where: {
+                isAvailable: true,
+                session: {
+                    logoutTime: null
+                }
+            },
+            select: {
+                name: true,
+                type: true,
+                size: true,
+                sharedTime: true,
+                session: {
+                    select: {
+                        ipAddress: true,
+                        user: {
+                            select: {
+                                username: true
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: {
+                sharedTime: 'desc'
+            }
+        });
+        if (listFileAvailable.length > 0) {
+            return listFileAvailable.map((file) => ({
+                name: file.name,
+                username: file.session.user.username,
+                ipAddress: file.session.ipAddress,
+                type: file.type,
+                size: file.size,
+                sharedTime: file.sharedTime
+            }));
+        } else {
+            return [];
+        }
+    } catch (err) {
+        logger.error(err);
+        return res.internalServerError(err);
+    }
+}
+
+export const hostNameHandler = {
+    getAllHostNames,
+    transferHostNameToIP,
+    listFileAvailable
+}
