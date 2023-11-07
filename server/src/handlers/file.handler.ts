@@ -60,7 +60,10 @@ const listHostName: Handler<string[], { Querystring: { fname: string } }> = asyn
     const fname = req.query.fname;
 
     const listSessionIds = await prisma.sharedDocument.findMany({
-        where: { name: fname },
+        where: { 
+            name: fname,
+            isAvailable: true
+        },
         select: { sessionId: true }
     });
     if (!listSessionIds.length) return res.badRequest(FNAME_NOT_FOUND);
